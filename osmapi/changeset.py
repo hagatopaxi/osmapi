@@ -213,8 +213,13 @@ class ChangesetMixin:
                 forceAuth=True,
             )
         except errors.ApiError as e:
+            payload_str = (
+                e.payload.decode("utf-8", errors="replace")
+                if isinstance(e.payload, bytes)
+                else str(e.payload)
+            )
             if e.status == 409 and re.search(
-                r"The changeset .* was closed at .*", e.payload
+                r"The changeset .* was closed at .*", payload_str
             ):
                 raise errors.ChangesetClosedApiError(
                     e.status, e.reason, e.payload
@@ -272,7 +277,7 @@ class ChangesetMixin:
         uri = "/api/0.6/changesets"
         params: dict[str, Any] = {}
         if min_lon or min_lat or max_lon or max_lat:
-            params["bbox"] = f"{min_lon},{min_lat},{max_lon},{max_lat}"
+            params["bbox"] = f"{min_lon},{min_lat},{max_lon},{max_lat}"  # noqa: E231
         if userid:
             params["user"] = userid
         if username:
@@ -282,7 +287,7 @@ class ChangesetMixin:
         if created_before:
             if not closed_after:
                 closed_after = "1970-01-01T00:00:00Z"
-            params["time"] = f"{closed_after},{created_before}"
+            params["time"] = f"{closed_after},{created_before}"  # noqa: E231
         if only_open:
             params["open"] = 1
         if only_closed:
